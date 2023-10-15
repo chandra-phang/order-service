@@ -1,6 +1,7 @@
 package model
 
 import (
+	"order-service/lib"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -20,6 +21,16 @@ var (
 	OrderStatusCompleted OrderStatus = "COMPLETED"
 	OrderStatusCancelled OrderStatus = "CANCELLED"
 )
+
+func (Order) Initialize(userID string) *Order {
+	return &Order{
+		ID:        lib.GenerateUUID(),
+		UserID:    userID,
+		Status:    OrderStatusCompleted,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+}
 
 type IOrderRepository interface {
 	GetOrders(ctx echo.Context, userID string) ([]Order, error)

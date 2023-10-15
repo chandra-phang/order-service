@@ -10,11 +10,9 @@ import (
 	"order-service/db"
 	v1request "order-service/dto/request/v1"
 	"order-service/handlers"
-	"order-service/lib"
 	"order-service/model"
 	"order-service/repositories"
 	"order-service/request"
-	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -54,20 +52,15 @@ func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) 
 		return apperrors.ErrUserIdIsEmpty
 	}
 
+	userIdString := userID.(string)
+
 	// add DB transaction
 	tx, _ := svc.dbCon.Begin()
 	defer tx.Rollback()
 
 	// create order
-	order := model.Order{
-		ID:        lib.GenerateUUID(),
-		UserID:    userID.(string),
-		Status:    model.OrderStatusCompleted,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	err := svc.orderRepo.CreateOrder(ctx, order)
+	order := new(model.Order).Initialize(userIdString)
+	err := svc.orderRepo.CreateOrder(ctx, *order)
 	if err != nil {
 		return err
 	}
@@ -87,19 +80,14 @@ func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) 
 			return apperrors.ErrProductNotFound
 		}
 
-		orderItem := model.OrderItem{
-			ID:        lib.GenerateUUID(),
-			OrderID:   order.ID,
-			ProductID: orderItemDTO.ProductID,
-			Quantity:  orderItemDTO.Quantity,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		err = svc.orderItemRepo.CreateOrderItem(ctx, orderItem)
+		// create orderItem
+		orderItem := new(model.OrderItem).Initialize(order.ID, orderItemDTO.ProductID, orderItemDTO.Quantity)
+		err = svc.orderItemRepo.CreateOrderItem(ctx, *orderItem)
 		if err != nil {
 			return err
 		}
 
+		// prepare requestBody for increase-booked-quota API
 		productDTO := v1request.ProductDTO{
 			ProductID: orderItem.ProductID,
 			Quantity:  orderItem.Quantity,
@@ -127,6 +115,7 @@ func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) 
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -145,10 +134,12 @@ func (svc orderSvc) CancelOrder(ctx echo.Context, orderID string) error {
 		return err
 	}
 
+	// validate userID
 	if order.UserID != userID {
 		return apperrors.ErrUnauthorized
 	}
 
+	// validate order.Status
 	if order.Status == model.OrderStatusCancelled {
 		return apperrors.ErrOrderAlreadyCancelled
 	}
@@ -163,6 +154,7 @@ func (svc orderSvc) CancelOrder(ctx echo.Context, orderID string) error {
 		return err
 	}
 
+	// prepare requestBody to decrease-booked-quota API
 	reqDTO := v1request.DecreaseProductBookedQuotaDTO{}
 	for _, orderItem := range orderItems {
 		productDTO := v1request.ProductDTO{
@@ -203,6 +195,7 @@ func (svc orderSvc) ListOrder(ctx echo.Context) ([]model.Order, error) {
 		return nil, apperrors.ErrUserIdIsEmpty
 	}
 
+	// retrieve orders by userID
 	orders, err := svc.orderRepo.GetOrders(ctx, userID.(string))
 	if err != nil {
 		return nil, err
