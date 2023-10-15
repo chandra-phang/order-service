@@ -44,7 +44,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return controllers.WriteError(c, statusCode, err)
 		}
 
-		c.Set(string(UserContextKey), response.Result.User.ID)
+		c.Set(UserContextKey, response.Result.User.ID)
 
 		return next(c)
 	}
