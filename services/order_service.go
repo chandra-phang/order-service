@@ -69,7 +69,7 @@ func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) 
 	// validate orderItems
 	for _, orderItemDTO := range dto.OrderItems {
 		// validate productID with product-service - get product
-		err := svc.productSvcCon.GetProduct(orderItemDTO.ProductID)
+		err := svc.productSvcCon.GetProduct(ctx, orderItemDTO.ProductID)
 		if err != nil {
 			return nil
 		}
@@ -85,7 +85,7 @@ func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) 
 	}
 
 	// send request to product-service to increase-booked-quota
-	err = svc.productSvcCon.IncreaseBookedQuota(orderItems)
+	err = svc.productSvcCon.IncreaseBookedQuota(ctx, orderItems)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (svc orderSvc) CancelOrder(ctx echo.Context, orderID string) error {
 		return err
 	}
 
-	err = svc.productSvcCon.DecreaseBookedQuota(orderItems)
+	err = svc.productSvcCon.DecreaseBookedQuota(ctx, orderItems)
 	if err != nil {
 		return err
 	}

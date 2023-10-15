@@ -8,6 +8,8 @@ import (
 	v1request "order-service/dto/request/v1"
 	"order-service/model"
 	"order-service/request"
+
+	"github.com/labstack/echo/v4"
 )
 
 var productServiceCon *ProductServiceConnector
@@ -32,7 +34,7 @@ func GetProductServiceConnector() *ProductServiceConnector {
 	return productServiceCon
 }
 
-func (con ProductServiceConnector) GetProduct(productID string) error {
+func (con ProductServiceConnector) GetProduct(ctx echo.Context, productID string) error {
 	url := con.Host + con.GetProductUri + productID
 	_, statusCode, err := request.Get(url)
 	if err != nil {
@@ -46,7 +48,7 @@ func (con ProductServiceConnector) GetProduct(productID string) error {
 	return nil
 }
 
-func (con ProductServiceConnector) IncreaseBookedQuota(orderItems []model.OrderItem) error {
+func (con ProductServiceConnector) IncreaseBookedQuota(ctx echo.Context, orderItems []model.OrderItem) error {
 	reqDTO := v1request.IncreaseProductBookedQuotaDTO{}
 
 	for _, orderItem := range orderItems {
@@ -76,7 +78,7 @@ func (con ProductServiceConnector) IncreaseBookedQuota(orderItems []model.OrderI
 	return nil
 }
 
-func (con ProductServiceConnector) DecreaseBookedQuota(orderItems []model.OrderItem) error {
+func (con ProductServiceConnector) DecreaseBookedQuota(ctx echo.Context, orderItems []model.OrderItem) error {
 	reqDTO := v1request.DecreaseProductBookedQuotaDTO{}
 	for _, orderItem := range orderItems {
 		productDTO := v1request.ProductDTO{

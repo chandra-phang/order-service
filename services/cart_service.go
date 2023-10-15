@@ -48,7 +48,7 @@ func (svc cartSvc) AddToCart(ctx echo.Context, dto v1request.AddToCartDTO) error
 	}
 
 	productServiceCon := httpconnector.GetProductServiceConnector()
-	err := productServiceCon.GetProduct(dto.ProductID)
+	err := productServiceCon.GetProduct(ctx, dto.ProductID)
 	if err != nil {
 		return err
 	}
