@@ -33,10 +33,3 @@ func WriteError(c echo.Context, statusCode int, err error) error {
 		Failure: err.Error(),
 	})
 }
-
-func WriteErrorMsg(c echo.Context, statusCode int, errMsg string) error {
-	return c.JSON(statusCode, FailureResponse{
-		Success: false,
-		Failure: errMsg,
-	})
-}

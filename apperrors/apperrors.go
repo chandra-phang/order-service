@@ -12,4 +12,5 @@ var (
 	ErrFailedToIncreaseProductQuota = errors.New("failed to increase product quota")
 	ErrFailedToDecreaseProductQuota = errors.New("failed to decrease product quota")
 	ErrUnauthorized                 = errors.New("insufficient permissions")
+	ErrAuthenticationFailed         = errors.New("authentication failed")
 )
