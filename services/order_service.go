@@ -19,7 +19,7 @@ type IOrderService interface {
 	// svc CRUD methods for domain objects
 	CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) error
 	CancelOrder(ctx echo.Context, orderID string) error
-	ListOrder(ctx echo.Context) ([]model.Order, error)
+	ListOrders(ctx echo.Context) ([]model.Order, error)
 }
 
 type orderSvc struct {
@@ -146,7 +146,7 @@ func (svc orderSvc) CancelOrder(ctx echo.Context, orderID string) error {
 	return nil
 }
 
-func (svc orderSvc) ListOrder(ctx echo.Context) ([]model.Order, error) {
+func (svc orderSvc) ListOrders(ctx echo.Context) ([]model.Order, error) {
 	userID := ctx.Get(middleware.UserContextKey)
 	if userID == nil {
 		return nil, apperrors.ErrUserIdIsEmpty

@@ -19,7 +19,7 @@ func InitRoutes() {
 	v1Api.POST("/carts", cartController.AddToCart)
 	v1Api.POST("/orders", orderController.CreateOrder)
 	v1Api.PUT("/orders/:id/cancel", orderController.CancelOrder)
-	v1Api.GET("/orders", orderController.ListOrder)
+	v1Api.GET("/orders", orderController.ListOrders)
 
 	log.Println("Server is running at 8082 port.")
 	e.Logger.Fatal(e.Start(":8082"))

@@ -58,12 +58,12 @@ func (c *orderController) CancelOrder(ctx echo.Context) error {
 	return controller.WriteSuccess(ctx, http.StatusOK, nil)
 }
 
-func (c *orderController) ListOrder(ctx echo.Context) error {
-	orders, err := c.svc.ListOrder(ctx)
+func (c *orderController) ListOrders(ctx echo.Context) error {
+	orders, err := c.svc.ListOrders(ctx)
 	if err != nil {
 		return controller.WriteError(ctx, http.StatusInternalServerError, err)
 	}
 
-	resp := new(v1resp.ListOrderDTO).ConvertFromOrdersEntity(orders)
+	resp := new(v1resp.ListOrdersDTO).ConvertFromOrdersEntity(orders)
 	return controller.WriteSuccess(ctx, http.StatusOK, resp)
 }

@@ -5,7 +5,7 @@ import (
 	"order-service/model"
 )
 
-type ListOrderDTO struct {
+type ListOrdersDTO struct {
 	Orders []OrderDTO `json:"orders"`
 }
 
@@ -17,8 +17,8 @@ type OrderDTO struct {
 	UpdatedAt int64  `json:"updatedAt"`
 }
 
-func (dto *ListOrderDTO) ConvertFromOrdersEntity(orders []model.Order) *ListOrderDTO {
-	resp := &ListOrderDTO{}
+func (dto *ListOrdersDTO) ConvertFromOrdersEntity(orders []model.Order) *ListOrdersDTO {
+	resp := &ListOrdersDTO{}
 	for _, order := range orders {
 		orderDTO := OrderDTO{
 			ID:        order.ID,
