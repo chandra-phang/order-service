@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"order-service/api/controllers"
+	"order-service/apperrors"
 	"order-service/config"
 	v1req "order-service/dto/request/v1"
 	v1resp "order-service/dto/response/v1"
@@ -30,13 +30,14 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		authorization := c.Request().Header.Get("Authorization")
 
 		// pass the Authorization header to auth service API
-		authUrl := fmt.Sprintf("%s/v1/authenticate", config.GetConfig().AuthSvcHost)
+		cfg := config.GetConfig()
+		authUrl := cfg.AuthSvcHost + cfg.AuthenticateUri
 		resp, statusCode, err := request.Post(authUrl, data, authorization)
 		if err != nil {
 			return controllers.WriteError(c, http.StatusInternalServerError, err)
 		}
 		if statusCode != http.StatusOK {
-			return controllers.WriteErrorMsg(c, statusCode, "Authentication failed")
+			return controllers.WriteError(c, statusCode, apperrors.ErrAuthenticationFailed)
 		}
 
 		var response v1resp.AuthenticateDTO

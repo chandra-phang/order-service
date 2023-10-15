@@ -2,7 +2,6 @@ package services
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"order-service/api/middleware"
 	"order-service/apperrors"
@@ -20,11 +19,11 @@ import (
 )
 
 type ICartService interface {
-	// svc CRUD methods for domain objects
 	AddToCart(ctx echo.Context, dto v1request.AddToCartDTO) error
 }
 
 type cartSvc struct {
+	config          *config.Config
 	dbCon           *sql.DB
 	cartProductRepo model.ICartProductRepository
 }
@@ -33,6 +32,7 @@ var cartSvcSingleton ICartService
 
 func InitCartService(h handlers.Handler) {
 	cartSvcSingleton = cartSvc{
+		config:          config.GetConfig(),
 		dbCon:           db.GetDB(),
 		cartProductRepo: repositories.NewCartProductRepositoryInstance(h.DB),
 	}
@@ -44,11 +44,11 @@ func GetCartService() ICartService {
 
 func (svc cartSvc) AddToCart(ctx echo.Context, dto v1request.AddToCartDTO) error {
 	userID := ctx.Get(middleware.UserContextKey)
-	if userID == "" {
+	if userID == nil {
 		return apperrors.ErrUserIdIsEmpty
 	}
 
-	url := config.GetConfig().ProductSvcHost + fmt.Sprintf("/v1/products/%s", dto.ProductID)
+	url := svc.config.ProductSvcHost + svc.config.GetProductUri + dto.ProductID
 	_, statusCode, err := request.Get(url)
 	if err != nil {
 		return err

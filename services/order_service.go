@@ -3,7 +3,6 @@ package services
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"order-service/api/middleware"
 	"order-service/apperrors"
@@ -28,6 +27,7 @@ type IOrderService interface {
 }
 
 type orderSvc struct {
+	config        *config.Config
 	dbCon         *sql.DB
 	orderRepo     model.IOrderRepository
 	orderItemRepo model.IOrderItemRepository
@@ -37,6 +37,7 @@ var orderSvcSingleton IOrderService
 
 func InitOrderService(h handlers.Handler) {
 	orderSvcSingleton = orderSvc{
+		config:        config.GetConfig(),
 		dbCon:         db.GetDB(),
 		orderRepo:     repositories.NewOrderRepositoryInstance(h.DB),
 		orderItemRepo: repositories.NewOrderItemRepositoryInstance(h.DB),
@@ -76,7 +77,7 @@ func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) 
 	// validate orderItems
 	for _, orderItemDTO := range dto.OrderItems {
 		// send request to product-service to get product by ID
-		url := config.GetConfig().ProductSvcHost + fmt.Sprintf("/v1/products/%s", orderItemDTO.ProductID)
+		url := svc.config.ProductSvcHost + svc.config.GetProductUri + orderItemDTO.ProductID
 		_, statusCode, err := request.Get(url)
 		if err != nil {
 			return err
@@ -107,7 +108,7 @@ func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) 
 	}
 
 	// send request to product-service to increase-booked-quota
-	url := config.GetConfig().ProductSvcHost + "/v1/products/increase-booked-quota"
+	url := svc.config.ProductSvcHost + svc.config.IncreaseBookedQuotaUri
 	reqBody, err := json.Marshal(reqDTO)
 	if err != nil {
 		return err
@@ -173,7 +174,7 @@ func (svc orderSvc) CancelOrder(ctx echo.Context, orderID string) error {
 	}
 
 	// send request to product-service to decrease-booked-quota
-	url := config.GetConfig().ProductSvcHost + "/v1/products/decrease-booked-quota"
+	url := svc.config.ProductSvcHost + svc.config.DecreaseBookedQuotaUri
 	reqBody, err := json.Marshal(reqDTO)
 	if err != nil {
 		return err
