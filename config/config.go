@@ -19,7 +19,7 @@ type Config struct {
 	AuthenticateUri string
 }
 
-func InitConfig() {
+func InitConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -34,6 +34,8 @@ func InitConfig() {
 		AuthSvcHost:     os.Getenv("AUTH_SERVICE_HOST"),
 		AuthenticateUri: os.Getenv("AUTHENTICATE_URI"),
 	}
+
+	return config
 }
 
 func GetConfig() *Config {

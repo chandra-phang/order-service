@@ -5,6 +5,7 @@ import (
 	"order-service/config"
 	"order-service/db"
 	"order-service/handlers"
+	"order-service/httpconnector"
 	"order-service/services"
 )
 
@@ -17,7 +18,9 @@ func NewApplication() Application {
 }
 
 func (a Application) InitApplication() {
-	config.InitConfig()
+	cfg := config.InitConfig()
+
+	httpconnector.InitProductServiceConnector(*cfg)
 
 	database := db.InitConnection()
 	h := handlers.New(database)

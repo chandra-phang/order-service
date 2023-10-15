@@ -2,17 +2,15 @@ package services
 
 import (
 	"database/sql"
-	"encoding/json"
-	"net/http"
 	"order-service/api/middleware"
 	"order-service/apperrors"
 	"order-service/config"
 	"order-service/db"
 	v1request "order-service/dto/request/v1"
 	"order-service/handlers"
+	"order-service/httpconnector"
 	"order-service/model"
 	"order-service/repositories"
-	"order-service/request"
 
 	"github.com/labstack/echo/v4"
 )
@@ -27,6 +25,7 @@ type IOrderService interface {
 type orderSvc struct {
 	config        *config.Config
 	dbCon         *sql.DB
+	productSvcCon *httpconnector.ProductServiceConnector
 	orderRepo     model.IOrderRepository
 	orderItemRepo model.IOrderItemRepository
 }
@@ -37,6 +36,7 @@ func InitOrderService(h handlers.Handler) {
 	orderSvcSingleton = orderSvc{
 		config:        config.GetConfig(),
 		dbCon:         db.GetDB(),
+		productSvcCon: httpconnector.GetProductServiceConnector(),
 		orderRepo:     repositories.NewOrderRepositoryInstance(h.DB),
 		orderItemRepo: repositories.NewOrderItemRepositoryInstance(h.DB),
 	}
@@ -65,19 +65,13 @@ func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) 
 		return err
 	}
 
-	reqDTO := v1request.IncreaseProductBookedQuotaDTO{}
-
+	orderItems := []model.OrderItem{}
 	// validate orderItems
 	for _, orderItemDTO := range dto.OrderItems {
 		// validate productID with product-service - get product
-		url := svc.config.ProductSvcHost + svc.config.GetProductUri + orderItemDTO.ProductID
-		_, statusCode, err := request.Get(url)
+		err := svc.productSvcCon.GetProduct(orderItemDTO.ProductID)
 		if err != nil {
-			return err
-		}
-
-		if statusCode != http.StatusOK {
-			return apperrors.ErrProductNotFound
+			return nil
 		}
 
 		// create orderItem
@@ -87,28 +81,13 @@ func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) 
 			return err
 		}
 
-		// prepare requestBody for increase-booked-quota API
-		productDTO := v1request.ProductDTO{
-			ProductID: orderItem.ProductID,
-			Quantity:  orderItem.Quantity,
-		}
-		reqDTO.Products = append(reqDTO.Products, productDTO)
+		orderItems = append(orderItems, *orderItem)
 	}
 
 	// send request to product-service to increase-booked-quota
-	url := svc.config.ProductSvcHost + svc.config.IncreaseBookedQuotaUri
-	reqBody, err := json.Marshal(reqDTO)
+	err = svc.productSvcCon.IncreaseBookedQuota(orderItems)
 	if err != nil {
 		return err
-	}
-
-	_, statusCode, err := request.Put(url, reqBody)
-	if err != nil {
-		return err
-	}
-
-	if statusCode != http.StatusOK {
-		return apperrors.ErrFailedToIncreaseProductQuota
 	}
 
 	err = tx.Commit()
@@ -154,31 +133,9 @@ func (svc orderSvc) CancelOrder(ctx echo.Context, orderID string) error {
 		return err
 	}
 
-	// prepare requestBody to decrease-booked-quota API
-	reqDTO := v1request.DecreaseProductBookedQuotaDTO{}
-	for _, orderItem := range orderItems {
-		productDTO := v1request.ProductDTO{
-			ProductID: orderItem.ProductID,
-			Quantity:  orderItem.Quantity,
-		}
-
-		reqDTO.Products = append(reqDTO.Products, productDTO)
-	}
-
-	// send request to product-service to decrease-booked-quota
-	url := svc.config.ProductSvcHost + svc.config.DecreaseBookedQuotaUri
-	reqBody, err := json.Marshal(reqDTO)
+	err = svc.productSvcCon.DecreaseBookedQuota(orderItems)
 	if err != nil {
 		return err
-	}
-
-	_, statusCode, err := request.Put(url, reqBody)
-	if err != nil {
-		return err
-	}
-
-	if statusCode != http.StatusOK {
-		return apperrors.ErrFailedToDecreaseProductQuota
 	}
 
 	err = tx.Commit()

@@ -2,17 +2,16 @@ package services
 
 import (
 	"database/sql"
-	"net/http"
 	"order-service/api/middleware"
 	"order-service/apperrors"
 	"order-service/config"
 	"order-service/db"
 	v1request "order-service/dto/request/v1"
 	"order-service/handlers"
+	"order-service/httpconnector"
 	"order-service/lib"
 	"order-service/model"
 	"order-service/repositories"
-	"order-service/request"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -48,14 +47,10 @@ func (svc cartSvc) AddToCart(ctx echo.Context, dto v1request.AddToCartDTO) error
 		return apperrors.ErrUserIdIsEmpty
 	}
 
-	url := svc.config.ProductSvcHost + svc.config.GetProductUri + dto.ProductID
-	_, statusCode, err := request.Get(url)
+	productServiceCon := httpconnector.GetProductServiceConnector()
+	err := productServiceCon.GetProduct(dto.ProductID)
 	if err != nil {
 		return err
-	}
-
-	if statusCode != http.StatusOK {
-		return apperrors.ErrProductNotFound
 	}
 
 	// add DB transaction
