@@ -21,6 +21,7 @@ func (a Application) InitApplication() {
 	cfg := config.InitConfig()
 
 	httpconnector.InitProductServiceConnector(*cfg)
+	httpconnector.InitAuthServiceConnector(*cfg)
 
 	database := db.InitConnection()
 	h := handlers.New(database)
