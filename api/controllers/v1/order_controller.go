@@ -25,14 +25,17 @@ func InitOrderController() *orderController {
 }
 
 func (c *orderController) CreateOrder(ctx echo.Context) error {
-	reqBody, _ := ioutil.ReadAll(ctx.Request().Body)
-	dto := v1req.CreateOrderDTO{}
+	reqBody, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		return controller.WriteError(ctx, http.StatusBadRequest, err)
+	}
 
+	dto := v1req.CreateOrderDTO{}
 	if err := json.Unmarshal(reqBody, &dto); err != nil {
 		return controller.WriteError(ctx, http.StatusBadRequest, err)
 	}
 
-	err := dto.Validate(ctx)
+	err = dto.Validate(ctx)
 	if err != nil {
 		return controller.WriteError(ctx, http.StatusBadRequest, err)
 	}
@@ -47,7 +50,6 @@ func (c *orderController) CreateOrder(ctx echo.Context) error {
 
 func (c *orderController) CancelOrder(ctx echo.Context) error {
 	productID := ctx.Param("id")
-
 	err := c.svc.CancelOrder(ctx, productID)
 	if err != nil {
 		return controller.WriteError(ctx, http.StatusInternalServerError, err)

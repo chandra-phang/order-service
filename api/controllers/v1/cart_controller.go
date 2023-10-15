@@ -24,14 +24,17 @@ func InitCartController() *cartController {
 }
 
 func (c *cartController) AddToCart(ctx echo.Context) error {
-	reqBody, _ := ioutil.ReadAll(ctx.Request().Body)
-	dto := v1request.AddToCartDTO{}
+	reqBody, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		return controller.WriteError(ctx, http.StatusBadRequest, err)
+	}
 
+	dto := v1request.AddToCartDTO{}
 	if err := json.Unmarshal(reqBody, &dto); err != nil {
 		return controller.WriteError(ctx, http.StatusBadRequest, err)
 	}
 
-	err := dto.Validate(ctx)
+	err = dto.Validate(ctx)
 	if err != nil {
 		return controller.WriteError(ctx, http.StatusBadRequest, err)
 	}
