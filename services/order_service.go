@@ -69,7 +69,7 @@ func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) 
 
 	// validate orderItems
 	for _, orderItemDTO := range dto.OrderItems {
-		// send request to product-service to get product by ID
+		// validate productID with product-service - get product
 		url := svc.config.ProductSvcHost + svc.config.GetProductUri + orderItemDTO.ProductID
 		_, statusCode, err := request.Get(url)
 		if err != nil {
