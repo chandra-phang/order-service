@@ -48,7 +48,7 @@ func GetOrderService() IOrderService {
 }
 
 func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) error {
-	userID := ctx.Get(string(middleware.UserContextKey))
+	userID := ctx.Get(middleware.UserContextKey)
 	if userID == nil {
 		return apperrors.ErrUserIdIsEmpty
 	}
@@ -130,7 +130,7 @@ func (svc orderSvc) CreateOrder(ctx echo.Context, dto v1request.CreateOrderDTO) 
 }
 
 func (svc orderSvc) CancelOrder(ctx echo.Context, orderID string) error {
-	userID := ctx.Get(string(middleware.UserContextKey))
+	userID := ctx.Get(middleware.UserContextKey)
 	if userID == nil {
 		return apperrors.ErrUserIdIsEmpty
 	}
@@ -197,7 +197,7 @@ func (svc orderSvc) CancelOrder(ctx echo.Context, orderID string) error {
 }
 
 func (svc orderSvc) ListOrder(ctx echo.Context) ([]model.Order, error) {
-	userID := ctx.Get(string(middleware.UserContextKey))
+	userID := ctx.Get(middleware.UserContextKey)
 	if userID == nil {
 		return nil, apperrors.ErrUserIdIsEmpty
 	}

@@ -43,7 +43,7 @@ func GetCartService() ICartService {
 }
 
 func (svc cartSvc) AddToCart(ctx echo.Context, dto v1request.AddToCartDTO) error {
-	userID := ctx.Get(string(middleware.UserContextKey))
+	userID := ctx.Get(middleware.UserContextKey)
 	if userID == "" {
 		return apperrors.ErrUserIdIsEmpty
 	}

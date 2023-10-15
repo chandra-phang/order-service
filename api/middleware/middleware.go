@@ -13,11 +13,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// contextKey is a custom type for putting auth-related values into a context.
-type contextKey string
-
-// userContextKey is a key for saving a User object into a context.
-const UserContextKey contextKey = "userID"
+// userContextKey is a key for saving a UserID into a context.
+const UserContextKey = "userID"
 
 func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -30,11 +27,11 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return controllers.WriteError(c, http.StatusInternalServerError, err)
 		}
 
-		authHeader := c.Request().Header.Get("Authorization")
+		authorization := c.Request().Header.Get("Authorization")
 
 		// pass the Authorization header to auth service API
 		authUrl := fmt.Sprintf("%s/v1/authenticate", config.GetConfig().AuthSvcHost)
-		resp, statusCode, err := request.PostWithAuthorization(authUrl, data, authHeader)
+		resp, statusCode, err := request.Post(authUrl, data, authorization)
 		if err != nil {
 			return controllers.WriteError(c, http.StatusInternalServerError, err)
 		}

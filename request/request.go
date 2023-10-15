@@ -21,7 +21,7 @@ func Get(url string) ([]byte, int, error) {
 	return respBytes, resp.StatusCode, nil
 }
 
-func PostWithAuthorization(url string, data []byte, authorization string) ([]byte, int, error) {
+func Post(url string, data []byte, authorization string) ([]byte, int, error) {
 	body := bytes.NewBuffer(data)
 
 	req, err := http.NewRequest("POST", url, body)
